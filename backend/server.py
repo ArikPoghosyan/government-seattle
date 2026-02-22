@@ -737,7 +737,7 @@ async def root():
 
 app.include_router(api_router)
 
-FRONTEND_DIR = Path(__file__).parent.parent / "frontend"
+FRONTEND_DIR = Path(__file__).parent.parent / "frontend" / "build"
 
 if FRONTEND_DIR.exists():
     logger.info(f"Frontend directory found at: {FRONTEND_DIR}")
