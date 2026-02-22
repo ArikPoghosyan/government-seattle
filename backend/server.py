@@ -741,7 +741,14 @@ FRONTEND_DIR = Path(__file__).parent.parent / "frontend" / "build"
 
 if FRONTEND_DIR.exists():
     logger.info(f"Frontend directory found at: {FRONTEND_DIR}")
-    app.mount("/static", StaticFiles(directory=str(FRONTEND_DIR)), name="static")
+    
+    # Монтируем static из папки build/static
+    static_dir = FRONTEND_DIR / "static"
+    if static_dir.exists():
+        app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
+        logger.info(f"Static directory mounted from: {static_dir}")
+    else:
+        logger.warning(f"Static directory not found at: {static_dir}")
     
     @app.get("/")
     async def serve_frontend():
@@ -752,14 +759,20 @@ if FRONTEND_DIR.exists():
     
     @app.get("/{full_path:path}")
     async def serve_spa(full_path: str):
+        # Не трогаем API
         if full_path.startswith("api/"):
             raise HTTPException(status_code=404, detail="Not found")
+        
+        # Пробуем найти файл (картинки, js, css)
         file_path = FRONTEND_DIR / full_path
         if file_path.exists() and file_path.is_file():
             return FileResponse(file_path)
+        
+        # Все остальное отдаем index.html (для SPA)
         index_path = FRONTEND_DIR / "index.html"
         if index_path.exists():
             return FileResponse(index_path)
+        
         raise HTTPException(status_code=404, detail="Not found")
 else:
     logger.warning(f"Frontend directory not found at: {FRONTEND_DIR}")
